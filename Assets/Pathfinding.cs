@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditor;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class Pathfinding : MonoBehaviour
 {
@@ -38,7 +40,15 @@ public class Pathfinding : MonoBehaviour
         float cellSize = 1f;
 
         // Draw grid cells
-        ResetCells();
+        for (int y = 0; y < grid.GetLength(0); y++)
+        {
+            for (int x = 0; x < grid.GetLength(1); x++)
+            {
+                Vector3 cellPosition = new Vector3(x * cellSize, 0, y * cellSize);
+                Gizmos.color = grid[y, x] == 1 ? Color.black : Color.white;
+                Gizmos.DrawCube(cellPosition, new Vector3(cellSize, 0.1f, cellSize));
+            }
+        }
 
         // Draw path
         foreach (var step in path)
@@ -106,19 +116,6 @@ public class Pathfinding : MonoBehaviour
         path.Add(start);
         path.Reverse();
     }
-    private void ResetCells()
-    {
-        float cellSize = 1f;
-        for (int y = 0; y < grid.GetLength(0); y++)
-        {
-            for (int x = 0; x < grid.GetLength(1); x++)
-            {
-                Vector3 cellPosition = new Vector3(x * cellSize, 0, y * cellSize);
-                Gizmos.color = grid[y, x] == 1 ? Color.black : Color.white;
-                Gizmos.DrawCube(cellPosition, new Vector3(cellSize, 0.1f, cellSize));
-            }
-        }
-    }
 
     private void GenerateRandomGrid(int width, int height, float obstacleProbability)
     {
@@ -137,5 +134,28 @@ public class Pathfinding : MonoBehaviour
         GenerateRandomGrid(5, 5, probabilityOfObstacle);
         path.Clear();
         FindPath(start, goal);
+    }
+    public void AddObstacle(Vector2Int position)
+    {
+        grid[position.x, position.y] = 1;
+        OnDrawGizmos();
+        path.Clear();
+        FindPath(start, goal);
+    }
+}
+
+[CustomEditor(typeof(Pathfinding))]
+public class PathfindingEditor : Editor
+{
+    Vector2Int position;
+    public override void OnInspectorGUI()
+    {
+        Pathfinding myTarget = (Pathfinding) target;
+        DrawDefaultInspector();
+        position = EditorGUILayout.Vector2IntField("Position of new obstacle:", position);
+        if (GUILayout.Button("Set Obstacle"))
+        {
+            myTarget.AddObstacle(position);
+        }
     }
 }
