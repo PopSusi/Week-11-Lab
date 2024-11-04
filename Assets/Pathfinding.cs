@@ -7,6 +7,7 @@ public class Pathfinding : MonoBehaviour
     private List<Vector2Int> path = new List<Vector2Int>();
     public Vector2Int start = new Vector2Int(0, 1);
     public Vector2Int goal = new Vector2Int(4, 4);
+    [Range(0f, 1f)]public float probabilityOfObstacle;
     private Vector2Int next;
     private Vector2Int current;
 
@@ -118,8 +119,22 @@ public class Pathfinding : MonoBehaviour
             }
         }
     }
+
+    private void GenerateRandomGrid(int width, int height, float obstacleProbability)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                grid[x, y] = 0;
+                if(Random.Range(0f, 1f) > (1 - obstacleProbability)) grid[x, y] = 1;
+            }
+        }
+    }
+
     public void OnValidate()
     {
+        GenerateRandomGrid(5, 5, probabilityOfObstacle);
         path.Clear();
         FindPath(start, goal);
     }
